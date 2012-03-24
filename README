@@ -1,0 +1,11 @@
+Server and ClientWorker
+=======================
+
+Server
+======
+Java server to handle Sockets and devide workload between one or more ClientWorkers
+
+ClientWorker
+============
+Java object to process demands received from registered server
+
