@@ -8,7 +8,7 @@ import java.util.LinkedList;
 public class ClientWorker extends Thread {
 	private Server server;
 	private int wakeuptime = 10000;
-	private int inputTimeout = 000;
+	private int inputTimeout = 2000;
 	LinkedList<Client> clients = new LinkedList<Client>();
 
 	public ClientWorker(Server server) {
