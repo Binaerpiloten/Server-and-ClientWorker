@@ -1,6 +1,5 @@
 package net;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.LinkedList;
@@ -69,9 +68,8 @@ public class ClientWorker extends Thread {
 	}
 
 	public void processCurrentClient(Client client) throws IOException {
-		BufferedReader in = client.getInputStream();
 		while (true) {
-			String rawPacket = in.readLine();
+			String rawPacket = client.read();
 			if (rawPacket != null) {
 				ProcessPacket(client, rawPacket);
 			} else {
@@ -88,7 +86,7 @@ public class ClientWorker extends Thread {
 
 		}
 		System.out.println("Incoming Packet : " + rawPacket);
-		client.getOutputStream().println(1);
+		client.write(1);
 	}
 
 	public int getWakeuptime() {

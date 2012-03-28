@@ -22,6 +22,18 @@ public class Client {
 		}
 	}
 	
+	public void write(Object s) {
+			out.println(s);
+	}
+	
+	public String read() {
+		try {
+			return in.readLine();
+		} catch (IOException e) {
+			return null;
+		}
+	}
+	
 	public BufferedReader getInputStream() {
 		return in;
 	}
