@@ -1,3 +1,10 @@
+ATTENTION
+=========
+THIS IS ALPHA-STAGE!
+- Code is designed to run in development environment.
+- Code is full of debugging outputs.
+- Although its working pretty fine there is no garanty!
+
 Server and ClientWorker
 =======================
 
