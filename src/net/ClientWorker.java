@@ -6,12 +6,12 @@ import java.util.LinkedList;
 
 public class ClientWorker extends Thread {
 	private Server server;
-	private int wakeuptime = 10000;
-	private int inputTimeout = 0;
+	private int inputTimeout = 2000;
 	LinkedList<Client> clients = new LinkedList<Client>();
 
 	public ClientWorker(Server server) {
 		this.server = server;
+		start();
 	}
 
 	public void run() {
@@ -73,7 +73,6 @@ public class ClientWorker extends Thread {
 			if (rawPacket != null) {
 				ProcessPacket(client, rawPacket);
 			} else {
-				// client.getSocket().close();
 				break;
 			}
 		}
@@ -92,13 +91,10 @@ public class ClientWorker extends Thread {
 	private void pullClients(Server server) {
 		server.pushClients(this);
 	}
-
-	public int getWakeuptime() {
-		return this.wakeuptime;
-	}
-
-	public void setWakeuptime(int wakeuptime) {
-		this.wakeuptime = wakeuptime;
+	
+	public synchronized void shutdown() {
+		this.interrupt();
+		this.notify();
 	}
 
 	public int getInputTimeout() {

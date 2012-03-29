@@ -11,7 +11,9 @@ public class Server extends Thread {
 	private ServerSocket sckServer;
 	private Socket sckClient;
 	private LinkedList<Client> clients = new LinkedList<Client>();
+	private LinkedList<ClientWorker> workers = new LinkedList<ClientWorker>();
 	private int port = 11000;
+	private int maxWorkers = 1;
 
 	ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -23,6 +25,12 @@ public class Server extends Thread {
 		this.port = port;
 		this.init();
 	}
+	
+	public Server(int port, int maxWorkers) {
+		this.port = port;
+		this.maxWorkers = maxWorkers;
+		this.init();
+	}
 
 	private void init() {
 		try {
@@ -31,6 +39,7 @@ public class Server extends Thread {
 			e.printStackTrace();
 		}
 		start();
+		workers.add(new ClientWorker(this));
 	}
 
 	public int getPort() {
@@ -46,31 +55,44 @@ public class Server extends Thread {
 	}
 
 	public void run() {
-		final ClientWorker cw = new ClientWorker(this);
-		cw.start();
+		boolean clientProcessed;
 		try {
 			while (true) {
+				clientProcessed = false;
 				sckClient = sckServer.accept();
 				System.out.println("Incoming Connection from "
 						+ sckClient.getInetAddress());
 				clients.add(new Client(sckClient));
-				System.out.println(cw.getState());
-				synchronized (cw) {
-					if (cw.getState() == Thread.State.WAITING) {
-						pushClients(cw);
-						System.out.println("PUSH!");
-						cw.notify();
+				for (ClientWorker currentWorker : workers) {
+					if (currentWorker.getState() == Thread.State.WAITING) {
+						synchronized (currentWorker) {
+							pushClients(currentWorker);
+							System.out.println("PUSH!");
+							currentWorker.notify();
+							clientProcessed = true;
+							break;
+						}
 					}
+				}
+				if (!clientProcessed && workers.size() < this.maxWorkers) {
+					System.out.println("All ClientWorkers busy - starting new one.");
+					ClientWorker newCw = new ClientWorker(this); 
+					workers.add(newCw);
 				}
 			}
 		} catch (IOException e) {
 			System.err.println("Socket error.");
 		}
 	}
-	
+
 	public void pushClients(ClientWorker cw) {
 		cw.addClients(clients);
 		System.out.println(clients.size() + " clients received.");
 		clients.clear();
+	}
+	
+	private void shutdownClientWorker(ClientWorker cw) {
+		workers.remove(cw);
+		cw.shutdown();
 	}
 }

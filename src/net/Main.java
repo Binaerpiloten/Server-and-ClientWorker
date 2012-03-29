@@ -3,7 +3,7 @@ package net;
 public class Main {
 
 	public static void main(String[] args) {
-		Server server = new Server();
+		new Server(11000, 1);
 		
 	}
 
