@@ -7,6 +7,7 @@ import java.util.LinkedList;
 public class ClientWorker extends Thread {
 	private Server server;
 	private int inputTimeout = 2000;
+	private int wakeupTime = 20000;
 	LinkedList<Client> clients = new LinkedList<Client>();
 
 	public ClientWorker(Server server) {
@@ -34,15 +35,16 @@ public class ClientWorker extends Thread {
 
 	private synchronized void update() throws InterruptedException {
 		pullClients(server);
-		System.out.println("PULL!");
-		if (clients.size() == 0) {
-			System.out.println("Nothing to do.");
+//		System.out.println("PULL!");
+		while (clients.size() == 0) {
+//			System.out.println("Nothing to do.");
 			if (server.isAlive()) {
 				System.out.println("Server running. Waiting.");
-				wait();
+				wait(this.wakeupTime);
 			} else {
 				System.out.println("Server not running. Exit.");
 				this.interrupt();
+				break;
 			}
 		}
 	}
@@ -79,13 +81,9 @@ public class ClientWorker extends Thread {
 	}
 
 	private void ProcessPacket(Client client, String rawPacket) {
-		try {
-			Thread.sleep(1000);
-		} catch (InterruptedException e) {
-
-		}
-		System.out.println("Incoming Packet : " + rawPacket);
-		client.write(1);
+		// TODO: Place code here.
+		System.out.println("Done.");
+		client.write(true);
 	}
 
 	private void pullClients(Server server) {

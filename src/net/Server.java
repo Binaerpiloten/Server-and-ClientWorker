@@ -60,14 +60,13 @@ public class Server extends Thread {
 			while (true) {
 				clientProcessed = false;
 				sckClient = sckServer.accept();
-				System.out.println("Incoming Connection from "
-						+ sckClient.getInetAddress());
+//				System.out.println("Incoming Connection from " + sckClient.getInetAddress());
 				clients.add(new Client(sckClient));
 				for (ClientWorker currentWorker : workers) {
-					if (currentWorker.getState() == Thread.State.WAITING) {
+					if (currentWorker.getState() == Thread.State.TIMED_WAITING) {
 						synchronized (currentWorker) {
 							pushClients(currentWorker);
-							System.out.println("PUSH!");
+//							System.out.println("PUSH!");
 							currentWorker.notify();
 							clientProcessed = true;
 							break;
@@ -87,7 +86,7 @@ public class Server extends Thread {
 
 	public void pushClients(ClientWorker cw) {
 		cw.addClients(clients);
-		System.out.println(clients.size() + " clients received.");
+//		System.out.println(clients.size() + " clients received.");
 		clients.clear();
 	}
 	

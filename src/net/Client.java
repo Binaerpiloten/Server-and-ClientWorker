@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 
 public class Client {
 	private final Socket socket;
@@ -29,6 +30,9 @@ public class Client {
 	public String read() {
 		try {
 			return in.readLine();
+		} catch (SocketTimeoutException e) {
+			System.out.println("Input timeout.");
+			return null;
 		} catch (IOException e) {
 			return null;
 		}
