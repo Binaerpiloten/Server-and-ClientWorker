@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.LinkedList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class Server extends Thread {
 	private ServerSocket sckServer;
@@ -15,8 +13,6 @@ public class Server extends Thread {
 	private int port = 11000;
 	private int maxWorkers = 1;
 
-	ExecutorService executor = Executors.newCachedThreadPool();
-
 	public Server() {
 		this.init();
 	}
@@ -25,7 +21,7 @@ public class Server extends Thread {
 		this.port = port;
 		this.init();
 	}
-	
+
 	public Server(int port, int maxWorkers) {
 		this.port = port;
 		this.maxWorkers = maxWorkers;
@@ -39,7 +35,7 @@ public class Server extends Thread {
 			e.printStackTrace();
 		}
 		start();
-		workers.add(new ClientWorker(this));
+		getClientWorker();
 	}
 
 	public int getPort() {
@@ -55,28 +51,16 @@ public class Server extends Thread {
 	}
 
 	public void run() {
-		boolean clientProcessed;
 		try {
 			while (true) {
-				clientProcessed = false;
 				sckClient = sckServer.accept();
-//				System.out.println("Incoming Connection from " + sckClient.getInetAddress());
 				clients.add(new Client(sckClient));
-				for (ClientWorker currentWorker : workers) {
-					if (currentWorker.getState() == Thread.State.TIMED_WAITING) {
-						synchronized (currentWorker) {
-							pushClients(currentWorker);
-//							System.out.println("PUSH!");
-							currentWorker.notify();
-							clientProcessed = true;
-							break;
-						}
+				ClientWorker cw = getClientWorker();
+				if (cw != null) {
+					synchronized (cw) {
+						pushClients(cw);
+						cw.notify();
 					}
-				}
-				if (!clientProcessed && workers.size() < this.maxWorkers) {
-					System.out.println("All ClientWorkers busy - starting new one.");
-					ClientWorker newCw = new ClientWorker(this); 
-					workers.add(newCw);
 				}
 			}
 		} catch (IOException e) {
@@ -86,10 +70,27 @@ public class Server extends Thread {
 
 	public void pushClients(ClientWorker cw) {
 		cw.addClients(clients);
-//		System.out.println(clients.size() + " clients received.");
+		// System.out.println(clients.size() + " clients received.");
 		clients.clear();
 	}
-	
+
+	private ClientWorker startClientWorker() {
+		ClientWorker cw = new ClientWorker(workers.size() + 1, this);
+		workers.add(cw);
+		return cw;
+	}
+
+	private ClientWorker getClientWorker() {
+		for (ClientWorker currentClientWorker : this.workers) {
+			if (currentClientWorker.getState() == Thread.State.TIMED_WAITING)
+				return currentClientWorker;
+		}
+		if (workers.size() < this.maxWorkers)
+			return startClientWorker();
+		return null;
+	}
+
+	@SuppressWarnings("unused")
 	private void shutdownClientWorker(ClientWorker cw) {
 		workers.remove(cw);
 		cw.shutdown();

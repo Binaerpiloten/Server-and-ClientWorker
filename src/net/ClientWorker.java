@@ -6,12 +6,14 @@ import java.util.LinkedList;
 
 public class ClientWorker extends Thread {
 	private Server server;
-	private int inputTimeout = 2000;
+	private int id;
+	private int inputTimeout = 000;
 	private int wakeupTime = 20000;
 	LinkedList<Client> clients = new LinkedList<Client>();
 
-	public ClientWorker(Server server) {
+	public ClientWorker(int id, Server server) {
 		this.server = server;
+		this.id = id;
 		start();
 	}
 
@@ -39,10 +41,10 @@ public class ClientWorker extends Thread {
 		while (clients.size() == 0) {
 //			System.out.println("Nothing to do.");
 			if (server.isAlive()) {
-				System.out.println("Server running. Waiting.");
+				System.out.println(this.id + ": Server running. Waiting.");
 				wait(this.wakeupTime);
 			} else {
-				System.out.println("Server not running. Exit.");
+				System.out.println(this.id + ": Server not running. Exit.");
 				this.interrupt();
 				break;
 			}
@@ -53,7 +55,7 @@ public class ClientWorker extends Thread {
 
 		while (clients.size() != 0) {
 			Client currentClient = clients.removeFirst();
-			System.out.println("Processing! (" + clients.size()
+			System.out.println(this.id + ": Processing! (" + clients.size()
 					+ " Clients in Queue)");
 			try {
 				currentClient.getSocket().setSoTimeout(inputTimeout);
@@ -78,11 +80,11 @@ public class ClientWorker extends Thread {
 				break;
 			}
 		}
+		System.out.println(this.id + ": Client done.");
 	}
 
 	private void ProcessPacket(Client client, String rawPacket) {
 		// TODO: Place code here.
-		System.out.println("Done.");
 		client.write(true);
 	}
 
