@@ -54,26 +54,23 @@ public class Server extends Thread {
 				System.out.println("Incoming Connection from "
 						+ sckClient.getInetAddress());
 				clients.add(new Client(sckClient));
+				System.out.println(cw.getState());
 				synchronized (cw) {
-					if (cw.getState() == Thread.State.TIMED_WAITING || cw.getState() == Thread.State.WAITING)
+					if (cw.getState() == Thread.State.WAITING) {
 						pushClients(cw);
+						System.out.println("PUSH!");
 						cw.notify();
+					}
 				}
 			}
 		} catch (IOException e) {
 			System.err.println("Socket error.");
 		}
 	}
-
-	public void pullClients(ClientWorker cw) {
-		cw.addClients(clients);
-		System.out.println("Pulled " + clients.size() + " clients");
-		clients.clear();
-	}
 	
-	private void pushClients(ClientWorker cw) {
+	public void pushClients(ClientWorker cw) {
 		cw.addClients(clients);
-		System.out.println("Pushed " + clients.size() + " clients");
+		System.out.println(clients.size() + " clients received.");
 		clients.clear();
 	}
 }

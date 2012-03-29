@@ -1,13 +1,13 @@
 package net;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
+import java.net.SocketException;
 import java.util.LinkedList;
 
 public class ClientWorker extends Thread {
 	private Server server;
 	private int wakeuptime = 10000;
-	private int inputTimeout = 2000;
+	private int inputTimeout = 0;
 	LinkedList<Client> clients = new LinkedList<Client>();
 
 	public ClientWorker(Server server) {
@@ -18,17 +18,13 @@ public class ClientWorker extends Thread {
 		while (true) {
 			try {
 				update();
-				if (this.isInterrupted() == false)
-					processClients();
-				else
-					break;
-			} catch (InterruptedException e) {
-				System.out.println("Wake up!");
-			} catch (SocketTimeoutException e) {
-				System.out.println("Socket timeout.");
-			} catch (IOException e) {
-				e.printStackTrace();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
 			}
+			if (this.isInterrupted() == false)
+				processClients();
+			else
+				break;
 		}
 	}
 
@@ -37,43 +33,47 @@ public class ClientWorker extends Thread {
 	}
 
 	private synchronized void update() throws InterruptedException {
-		while (clients.size() == 0) {
-			server.pullClients(this);
-			if (clients.size() == 0) {
-				System.out.println("Nothing to do.");
-				if (server.isAlive()) {
-					System.out.println("Server running. Waiting.");
-					wait(this.wakeuptime);
-				} else {
-					System.out.println("Server not running. Exit.");
-					this.interrupt();
-					break;
-				}
+		pullClients(server);
+		System.out.println("PULL!");
+		if (clients.size() == 0) {
+			System.out.println("Nothing to do.");
+			if (server.isAlive()) {
+				System.out.println("Server running. Waiting.");
+				wait();
+			} else {
+				System.out.println("Server not running. Exit.");
+				this.interrupt();
 			}
 		}
 	}
 
-	private void processClients() throws InterruptedException, IOException {
+	private void processClients() {
 
-		Client currentClient = clients.removeFirst();
-		currentClient.getSocket().setSoTimeout(inputTimeout);
-		System.out.println("Processing! (" + clients.size()
-				+ " Clients in Queue)");
-		processCurrentClient(currentClient);
-		try {
-			currentClient.getSocket().close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		while (clients.size() != 0) {
+			Client currentClient = clients.removeFirst();
+			System.out.println("Processing! (" + clients.size()
+					+ " Clients in Queue)");
+			try {
+				currentClient.getSocket().setSoTimeout(inputTimeout);
+			} catch (SocketException e) {
+				e.printStackTrace();
+			}
+			processCurrentClient(currentClient);
+			try {
+				currentClient.getSocket().close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
-	public void processCurrentClient(Client client) throws IOException {
+	public void processCurrentClient(Client client) {
 		while (true) {
 			String rawPacket = client.read();
 			if (rawPacket != null) {
 				ProcessPacket(client, rawPacket);
 			} else {
-				client.getSocket().close();
+				// client.getSocket().close();
 				break;
 			}
 		}
@@ -87,6 +87,10 @@ public class ClientWorker extends Thread {
 		}
 		System.out.println("Incoming Packet : " + rawPacket);
 		client.write(1);
+	}
+
+	private void pullClients(Server server) {
+		server.pushClients(this);
 	}
 
 	public int getWakeuptime() {
