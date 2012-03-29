@@ -70,7 +70,6 @@ public class Server extends Thread {
 
 	public void pushClients(ClientWorker cw) {
 		cw.addClients(clients);
-		// System.out.println(clients.size() + " clients received.");
 		clients.clear();
 	}
 

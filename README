@@ -26,10 +26,10 @@ FEATURES
 
 - High scalability due to multithreading ability. Need more capacities? Start more threads!
 - Server and ClientWorker running in different threads. Due to this services can be restarted separately.
-- Single ClientWorker can be feeded by several Server instances.
+- Single ClientWorker can be feeded by several Server instances. ( In progress )
 - Single Server can feed several ClientWorkers.
 - ClientWorker instance will shutdown itsself if corresponding Server instance is not running anymore.
 - ClientWorker is able to spread own workload among free ClientWorkers as long all ClientWorkers are registered at the same Server instance. ( In progess )
-- Server is able to start defined number of ClientWorkers and spread workload among them. ( In progress )
+- Server is able to start defined number of ClientWorkers and spread workload among them.
 - More to come...
 

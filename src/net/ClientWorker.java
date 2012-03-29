@@ -37,9 +37,7 @@ public class ClientWorker extends Thread {
 
 	private synchronized void update() throws InterruptedException {
 		pullClients(server);
-//		System.out.println("PULL!");
 		while (clients.size() == 0) {
-//			System.out.println("Nothing to do.");
 			if (server.isAlive()) {
 				System.out.println(this.id + ": Server running. Waiting.");
 				wait(this.wakeupTime);
